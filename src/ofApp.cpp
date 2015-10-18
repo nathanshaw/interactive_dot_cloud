@@ -19,55 +19,42 @@ void ofApp::setup(){
         ty[j] = ofRandom(0, 1000);
     }
     
+    // setup some initial values
     rad = 2000;
     vel = 0.1;
-    
-    // Set the bands that we want to respond to from our FFT
     radBand = 2;
     velBand = 125;
-
     ofSetBackgroundAuto(false);
     ofEnableAlphaBlending();
+    numPoints = 1000;
+    redDir = -1;
+    greenDir= -1;
+    blueDir = -1;
+    displayHelp = false;
     
-    // How many of the points will be use?
-    numPoints = 250;
-    
-    // is the gui currently being displayed?
-    displayGui = false;
-    
-    gui.setBackgroundColor(ofColor(0,0,0,50));
+    // gui setup
     gui.setup();
+    gui.setBackgroundColor(ofColor(0,0,0,50));
     gui.setPosition(30,10);
     
-    gui.add(guiToggle.setup("Display GUI", displayGui));
+    gui.add(guiToggle.setup("Display GUI", false));
     gui.add(colorToggle.setup("Line Color", true));
     gui.add(lineToggle.setup("Line Draw", true));
     gui.add(spectrumToggle.setup("Show Spectrum", false));
-    
-    gui.add(numParticleSlider.setup("Particle Number", numPoints, 10, 500));
-    
+    gui.add(numParticleSlider.setup("Particle Number", numPoints, 10, MAX_PARTICLES));
     gui.add(alphaFadeSlider.setup("Alpha Fade", 10, 10, 150));
-    gui.add(redSlider.setup("Red", 255, 75, 255));
-    gui.add(greenSlider.setup("Green", 255, 75, 255));
-    gui.add(blueSlider.setup("Blue", 255, 75, 255));
-    
+    gui.add(redSlider.setup("Red", 200, 75, 255));
+    gui.add(greenSlider.setup("Green", 200, 75, 255));
+    gui.add(blueSlider.setup("Blue", 200, 75, 255));
+    gui.add(colorDeltaSlider.setup("Color Delta", 1, 0.5, 3));
+    gui.add(dotLinesSlider.setup("Lines per dot", 1, 1, 10));
     gui.add(circleRadSlider.setup("Circle Rad", 0, 0, 8));
-    
     gui.add(lineMinSlider.setup("Line Min", 0, 0, 80));
     gui.add(lineRangeSlider.setup("Line Range", 7, 1, 25));
-    
     gui.add(cloudSizeSlider.setup("Cloud Size", 1.5, 1.0, 6.0));
     
     webColor = ofColor(redSlider, greenSlider, blueSlider, 50);
     
-    red = redSlider;
-    green = greenSlider;
-    blue = blueSlider;
-    redDir = -1;
-    greenDir = -1;
-    blueDir = -1;
-    
-    displayHelp = true;
 }
 
 //--------------------------------------------------------------
@@ -111,59 +98,49 @@ void ofApp::update(){
     
     webColor = ofColor(redSlider, greenSlider, blueSlider, 50);
     
-    if (spectrumToggle){
-        for (int i=0; i<NUM_BANDS; i++){
-            adjustedSpectrum[i] = spectrum[i] * (2*i+1) * 5;
-            if (adjustedSpectrum[i] > 70){
-                ofSetColor(255, 20, 20);
-                ofRect(ofGetWidth()/NUM_BANDS * i + 10, ofGetHeight()-10, 3, -spectrum[i] * (2*i+1) * 5);
-            }
-            else {
-                ofSetColor(75, 75, 75);
-                ofRect(ofGetWidth()/NUM_BANDS * i + 10, ofGetHeight()-10, 3, -spectrum[i] * (2*i+1) * 5);
-            }
-        }
-    }
     if (colorToggle){
         for (int i=0; i<NUM_BANDS; i++) {
-            bool redLock, greenLock, blueLock = true;
-            adjustedSpectrum[i] = spectrum[i] * (2*i+10) * 3;
-            if(adjustedSpectrum[i] > 70.0){
-                if (i < NUM_BANDS*0.3 && redLock){
-                    std::cout << i << " : " << adjustedSpectrum[i] << std::endl;
-                    if (red > 235 || red < 70){
-                        redDir *= -1;
-                        red += 10*redDir;
+            if (i >= 0 && i < 4){
+                spectrum[i] *= 0.15;
+            }
+            adjustedSpectrum[i] = spectrum[i] * (4*i+10) * 10;
+            if(adjustedSpectrum[i] > 200.0){
+                std::cout << i << " : " << adjustedSpectrum[i] << std::endl;
+                if (i < NUM_BANDS*0.1){
+                    if (redSlider > 250){
+                        redDir = -1;
+                        redSlider = 250;
                     }
-                    red += ofRandom(1, 7)*redDir;
-                    redSlider = red;
-                    redLock = false;
+                    else if(redSlider < 65){
+                        redDir = 1;
+                        redSlider = 65;
+                    }
+                    redSlider = redSlider + redDir*colorDeltaSlider;
                 }
-                else if (i < NUM_BANDS*0.6 && greenLock){
-                    if (green > 235 || green < 70){
-                        greenDir *= -1;
-                        green += 10 * greenDir;
+                else if (i < NUM_BANDS*0.4){
+                    if (greenSlider > 250){
+                        greenDir = -1;
+                        greenSlider = 250;
                     }
-                    green += ofRandom(1, 7)*greenDir;
-                    greenSlider = green;
-                    greenLock = false;
+                    else if(greenSlider < 65){
+                        greenDir = 1;
+                        greenSlider = 65;
+                    }
+                    greenSlider = greenSlider + greenDir*colorDeltaSlider;
                 }
-                else if (blueLock){
-                    if (blue > 235 || blue < 70){
-                        blueDir *= -1;
-                        blue += 10 * blueDir;
+                else{
+                    if (blueSlider > 250){
+                        blueDir = -1;
+                        blueSlider = 250;
                     }
-                    blue += ofRandom(1, 7)*blueDir;
-                    blueSlider = blue;
-                    blueLock = false;
+                    else if (blueSlider < 65){
+                        blueDir = 1;
+                        blueSlider = 65;
+                    }
+                    blueSlider = blueSlider + blueDir*colorDeltaSlider;
                 }
                 
-                webColor.set(ofColor(red, green, blue, 50));
-                if (DEBUG){
-                    std::cout << redDir << " : " << greenDir << " : " << blueDir << std::endl;
-                    std::cout << webColor << std::endl;
-                    std::cout << "- - - - - - - - - - - -" << std::endl;
-                }
+                webColor.set(ofColor(redSlider, greenSlider, blueSlider, 50));
             }
         }
     }
@@ -177,7 +154,7 @@ void ofApp::draw(){
     
     ofPushMatrix();
     
-    if (displayGui){
+    if (guiToggle){
         gui.draw();
     }
     
@@ -187,16 +164,20 @@ void ofApp::draw(){
     
     ofSetColor(webColor);
     for (int i=0; i<numPoints; i++) {
+        // ofSetColor(ofColor(webColor[0]+ofRandom(-3,3), webColor[1]+ofRandom(-3,3), webColor[2]+ofRandom(-3,3)));
         ofCircle(p[i], circleRadSlider);
     }
     
+    ofSetColor(webColor);
     if (lineToggle){
         for (int i=0; i<numPoints; i++) {
+            int foundLines = 0;
             for (int j=0; j<numPoints; j++) {
-                if (j !=i) {
+                if (j !=i && foundLines < dotLinesSlider) {
                     if (ofDist(p[i].x, p[i].y, p[j].x, p[j].y) <= lineMinSlider + lineRangeSlider) {
                         if (ofDist(p[i].x, p[i].y, p[j].x, p[j].y) >= lineMinSlider) {
                             ofLine(p[i], p[j]);
+                            foundLines += 1;
                         }
                     }
                 }
@@ -206,31 +187,44 @@ void ofApp::draw(){
     
     ofPopMatrix();
     
+    if (spectrumToggle){
+        for (int i=0; i<NUM_BANDS; i++){
+            adjustedSpectrum[i] = spectrum[i] * (2*i+1) * 4;
+            if (adjustedSpectrum[i] > 70){
+                ofSetColor(255, 20, 20);
+                ofRect(ofGetWidth()/NUM_BANDS * i + 10, ofGetHeight()-10, 3, -spectrum[i] * (2*i+1) * 4);
+            }
+            else {
+                ofSetColor(75, 75, 75);
+                ofRect(ofGetWidth()/NUM_BANDS * i + 10, ofGetHeight()-10, 3, -spectrum[i] * (2*i+1) * 4);
+            }
+        }
+    }
     if (displayHelp){
         ofSetColor(50,50,255);
-        ofDrawBitmapString("<space> to display GUI", ofGetWidth()-290, 30);
-        ofDrawBitmapString("<d> to increase dot size", ofGetWidth()-290, 70);
-        ofDrawBitmapString("<s> to show spectro-bars", ofGetWidth()-290, 90);
-        ofDrawBitmapString("<l> to turn off the lines", ofGetWidth()-290, 110);
-        ofDrawBitmapString("<c> to turn on colors", ofGetWidth()-290, 130);
-        ofDrawBitmapString("<a> to increate alpha", ofGetWidth()-290, 150);
-        ofDrawBitmapString("<left mouse> to mix up line rules", ofGetWidth()-290, 170);
-        ofDrawBitmapString("<right mouse> to change particle num", ofGetWidth()-290, 190);
-        ofDrawBitmapString("<-> to decrease cloud size", ofGetWidth()-290, 210);
-        ofDrawBitmapString("<+> to increate cloud size", ofGetWidth()-290, 230);
+        ofDrawBitmapString("<space> to display GUI", ofGetWidth()-310, 30);
+        ofDrawBitmapString("<d> to increase dot size", ofGetWidth()-310, 70);
+        ofDrawBitmapString("<s> to show spectro-bars", ofGetWidth()-310, 90);
+        ofDrawBitmapString("<l> to toggle the lines", ofGetWidth()-310, 110);
+        ofDrawBitmapString("<f> to increase line numbers", ofGetWidth()-310, 130);
+        ofDrawBitmapString("<c> to toggle colors", ofGetWidth()-310, 150);
+        ofDrawBitmapString("<a> to increase alpha (motion blur)", ofGetWidth()-310, 170);
+        ofDrawBitmapString("<-> and <+> to adjust cloud size", ofGetWidth()-310, 200);
+        ofDrawBitmapString("<[> and <]> to adjust min line length", ofGetWidth()-310, 220);
+        ofDrawBitmapString("<;> and <'> to adjust line range", ofGetWidth()-310, 240);
+        ofDrawBitmapString("<.> and </> to adjust the number of particles", ofGetWidth()-310, 260);
         
-        ofDrawBitmapString("<h> to hide this help text", ofGetWidth()-290, 270);
+        ofDrawBitmapString("<left mouse> to mix up line rules", ofGetWidth()-310, 290);
+        ofDrawBitmapString("<right mouse> to change particle num", ofGetWidth()-310, 310);
+        
+        ofDrawBitmapString("<h> to hide this help text", ofGetWidth()-310, 340);
     }
 }
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
     if (key == 32){
-        if (DEBUG){
-            std::cout << "space pressed" << std::endl;
-        }
-        displayGui = !displayGui;
-        guiToggle = displayGui;
+        guiToggle = !guiToggle;
     }
     else if (key == 67 || key == 99){
         colorToggle = !colorToggle;
@@ -264,14 +258,62 @@ void ofApp::keyPressed(int key){
     }
     else if (key == 43 || key == 61){
         // + pressed
-        if (cloudSizeSlider < 6){
-            cloudSizeSlider = cloudSizeSlider + 1;
+        if (cloudSizeSlider < 5.75){
+            cloudSizeSlider = cloudSizeSlider + 0.25;
         }
     }
     else if (key == 45 || key == 95){
         // - pressed
-        if (cloudSizeSlider > 0){
-            cloudSizeSlider = cloudSizeSlider - 1;
+        if (cloudSizeSlider > 0.25){
+            cloudSizeSlider = cloudSizeSlider - 0.25;
+        }
+    }
+    else if (key == 91 || key == 123){
+        // [ pressed
+        if (lineMinSlider >= 1){
+            lineMinSlider = lineMinSlider - (int)lineMinSlider/5 - 1;
+        }
+    }
+    else if (key == 93 || key == 125){
+        // ] pressed
+        if (lineMinSlider < 150){
+            lineMinSlider = lineMinSlider + (int)lineMinSlider/5 + 1;
+        }
+    }
+    else if (key == 58 || key == 59){
+        // ; pressed
+        if (lineRangeSlider >= 1){
+            lineRangeSlider = lineRangeSlider - 1 - (int)lineRangeSlider/10;
+        }
+        else if (lineRangeSlider > 0.075){
+            lineRangeSlider - 0.075;
+        }
+    }
+    else if (key == 39 || key == 34){
+        // ' pressed
+        if (lineRangeSlider < 30){
+            lineRangeSlider = lineRangeSlider + 1 + (int)lineRangeSlider/10;
+        }
+    }
+    else if (key == 46 || key == 62){
+        // ; pressed
+        if (numParticleSlider > 1){
+            numParticleSlider = numParticleSlider - 1 - (int)numParticleSlider/15;
+        }
+    }
+    else if (key == 47 || key == 63){
+        // ; pressed
+        if (numParticleSlider < MAX_PARTICLES){
+            numParticleSlider = numParticleSlider + 1 + (int)numParticleSlider/15;
+        }
+    }
+    else if (key == 70 || key == 102){
+        // l pressd
+        if (dotLinesSlider < 10){
+            dotLinesSlider = dotLinesSlider + 1;
+        }
+        else{
+            dotLinesSlider = 1;
         }
     }
 }
@@ -297,7 +339,7 @@ void ofApp::mouseDragged(int x, int y, int button){
 void ofApp::mousePressed(int x, int y, int button){
     if (button == 0){
         lineMinSlider = ofRandom(0, 50);
-        lineRangeSlider = ofRandom(1, 12);
+        lineRangeSlider = ofRandom(0, 12);
         ofSetColor(255,0,0);
         ofDrawBitmapString("Min and Max Dist Changed", 50, ofGetHeight()-50);
         if (DEBUG){
@@ -305,10 +347,7 @@ void ofApp::mousePressed(int x, int y, int button){
         }
     }
     else{
-        numPoints = ofRandom(20, 1000);
-        if (DEBUG){
-            std::cout << "NumPoints : " << numPoints << std::endl;
-        }
+        numPoints = ofRandom(20, MAX_PARTICLES);
         ofSetColor(255,0,0);
         ofDrawBitmapString("Num Points Now : ", 50, ofGetHeight()-50);
         numParticleSlider = numPoints;

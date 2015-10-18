@@ -33,42 +33,44 @@ public:
     ofxIntSlider greenSlider;
     ofxIntSlider blueSlider;
     ofxIntSlider circleRadSlider;
+    ofxIntSlider dotLinesSlider;
     
+    ofxFloatSlider colorDeltaSlider;
     ofxFloatSlider lineMinSlider;
     ofxFloatSlider lineRangeSlider;
     
     ofxFloatSlider cloudSizeSlider;
     
 private:
+    
     ofSoundPlayer soundPlayer;  // Sample Player
 		
+    // constants
+    const bool DEBUG = false;
+    const int MAX_PARTICLES = 2000;
     const int NUM_BANDS=256;    // Number of bands in our spectrum
+    
+    // want to be FFT
     float spectrum[256];        // Smoothed spectrum
     float adjustedSpectrum[256];// Smoothed spectrum
-   
     float rad;                  // Cloud radius param
     float vel;                  // Cloud velocity param
     int radBand;                // Band index in spectrum that affects rad value
     int velBand;                // Band index in spectrum that affects vel value
     
+    // point cloud stuff
     int numPoints;   // Number of points in the cloud
-    ofPoint p[1500];             // Cloud's point positions
-    float tx[1500], ty[1500];     // Offsets for perlin noise calculation
+    ofPoint p[2000];             // Cloud's point positions
+    float tx[2000], ty[2000];     // Offsets for perlin noise calculation
     
     float time0;                // previous frame time
     
-    bool displayGui;            // if the GUI currently being displayed?
-    bool displayHelp;           // display keyboard shorcuts
-    
+    // color stuff
     ofColor webColor;
-    int red;
-    int green;
-    int blue;
-    int redDir;
-    int greenDir;
-    int blueDir;
+    int redDir, greenDir, blueDir;
     
+    // the rest
     ofVec2f mousePos;
+    bool displayHelp;
     
-    const bool DEBUG = true;
 };
